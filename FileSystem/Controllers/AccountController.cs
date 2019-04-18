@@ -53,24 +53,7 @@ namespace FileSystem.Controllers
         }
 
 
-        //
-        // GET: /Account/Upload
-        [AllowAnonymous]
-        public ActionResult Upload(string returnUrl)
-        {
-            ViewBag.ReturnUrl = returnUrl;
-            return View();
-        }
-
-        //
-        // POST: /Account/Upload
-        //[HttpPost]
-        //[AllowAnonymous]
-        //[ValidateAntiForgeryToken]
-        //public async Task<ActionResult> Upload(LoginViewModel model, string returnUrl)
-        //{
-            
-        //}
+       
 
         //
         // GET: /Account/Login
@@ -95,7 +78,7 @@ namespace FileSystem.Controllers
 
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, change to shouldLockout: true
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
+            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: true);
             switch (result)
             {
                 case SignInStatus.Success:
