@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Ionic.Zip;
 
 namespace FileSystem.Controllers
 {
@@ -46,10 +47,23 @@ namespace FileSystem.Controllers
 
                     if (file != null)
                     {
-                        string path = Path.Combine(Server.MapPath("~/UploadedFiles"), Path.GetFileName(file.FileName));
-                        file.SaveAs(path);
+                        
+                        Console.WriteLine("File type -->", file.ContentType);
+                        using (ZipFile zip = new ZipFile())
+                        {
+                            zip.Encryption = EncryptionAlgorithm.WinZipAes256;
 
+                            zip.Password = "123456";
+
+
+                            string path = Path.Combine(Server.MapPath("~/UploadedFiles"), "packed");
+                            file.SaveAs(path);
+                            zip.AddFiles(Directory.GetFiles(Server.MapPath("~/UploadedFiles/")), "packed");
+                            zip.Save(Server.MapPath("~/Encoded.zip"));
+
+                        }
                     }
+
                     ViewBag.FileStatus = "File uploaded successfully.";
                 }
                 catch (Exception)
@@ -59,6 +73,7 @@ namespace FileSystem.Controllers
                 }
 
             }
+
             return View("Upload");
         }
     }
