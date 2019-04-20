@@ -11,6 +11,11 @@ using System.Web;
 using System.Web.Mvc;
 using Ionic.Zip;
 using Microsoft.AspNet.Identity;
+using SendGrid.Helpers.Mail;
+using Twilio;
+using Twilio.Rest.Api.V2010.Account;
+using Twilio.Types;
+using Attachment = System.Net.Mail.Attachment;
 
 namespace FileSystem.Controllers
 {
@@ -29,7 +34,7 @@ namespace FileSystem.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public ActionResult Upload(HttpPostedFileBase file)
+        public ActionResult Upload(HttpPostedFileBase file,String email, String phoneNumber)
         {
             if (ModelState.IsValid)
             {
@@ -38,7 +43,7 @@ namespace FileSystem.Controllers
                     string pass = "";
                     if (file != null )
                     {
-
+                        String password = "";
 
                         Console.WriteLine("File type -->", file.ContentType);
                         using (ZipFile zip = new ZipFile())
@@ -54,7 +59,7 @@ namespace FileSystem.Controllers
                                 int max_length = 10;
                                 byte[] salt = new byte[max_length];
                                 rngCsp.GetNonZeroBytes(salt);
-                                String password = Convert.ToBase64String(salt);
+                                password = Convert.ToBase64String(salt);
                                 Console.Write("Password-->", password);
                                 pass = zip.Password = password;
 
@@ -66,23 +71,26 @@ namespace FileSystem.Controllers
 
                                 //saves file to /ZippedFIles folder in the root director with the origial filename in zipped format
                                 // zip.Save(Server.MapPath("~/ZippedFiles/" + file.FileName + ".zip"));
-                                //zip.Save(Server.MapPath("~/ZippedFiles/"+file.FileName+".zip"));
-                                zip.Save(Server.MapPath("~/encrypted.zip"));
+                                zip.Save(Server.MapPath("~/ZippedFiles/"+file.FileName+".zip"));
+                                
                             }
 
                         }
 
-                        string zippath = Server.MapPath("~");
+                        
                         MailMessage msg = new MailMessage();
                         msg.From = new MailAddress("Adminstration@FileSystem.com");
-                        msg.To.Add(new MailAddress("uditkaul@rediffmail.com"));
-                   
-                        msg.Subject = "Please find the attached document sent by" ;
+                        msg.To.Add(new MailAddress(email));
+                        
+                        msg.Subject = "Please find the attached document" ;
                        
 
-                        Attachment at = new Attachment(Server.MapPath("~/encrypted.zip"));
-                        
-                        msg.Attachments.Add(at);
+                        Attachment data = new Attachment(Server.MapPath("~/ZippedFiles/" + file.FileName + ".zip"));
+                        ContentDisposition disposition = data.ContentDisposition;
+                        disposition.CreationDate = System.IO.File.GetCreationTime(file.ToString());
+                        disposition.ModificationDate = System.IO.File.GetLastWriteTime(file.ToString());
+                        disposition.ReadDate = System.IO.File.GetLastAccessTime(file.ToString());
+                        msg.Attachments.Add(data);
                         SmtpClient smtpClient = new SmtpClient("smtp.sendgrid.net", Convert.ToInt32(587));
                        // smtpClient.DeliveryMethod = SmtpDeliveryMethod.PickupDirectoryFromIis;
 
@@ -101,16 +109,30 @@ namespace FileSystem.Controllers
                             Console.WriteLine("Exception caught in CreateMessageWithAttachment(): {0}",
                                 ex.ToString());
                         }
-                        
-                  
+
+                        // Twilio Begin
+                        var accountSid = ConfigurationManager.AppSettings["SMSAccountIdentification"];
+                        var authToken = ConfigurationManager.AppSettings["SMSAccountPassword"];
+                        var fromNumber = ConfigurationManager.AppSettings["SMSAccountFrom"];
+
+
+                        TwilioClient.Init(accountSid, authToken);
+
+                        MessageResource result = MessageResource.Create(
+                            new PhoneNumber(phoneNumber),
+                            from: new PhoneNumber(fromNumber),
+                            body: "The password for the zip sent to "+email+" \n" + password 
+                        );
+
+
                     }
 
-                    ViewBag.FileStatus = "File uploaded successfully. -->" + pass + "-->" + file.ContentType;
+                    ViewBag.FileStatus = "File uploaded successfully. -->" + pass + "-->" + file.ContentType+"---->"+email;
                 }
                 catch (Exception)
                 {
 
-                    ViewBag.FileStatus = "Error while file uploading.";
+                    ViewBag.FileStatus = "Error while file uploading.--->"+email;
                 }
 
             }
