@@ -23,6 +23,7 @@ namespace FileSystem.Controllers
     {
         //
         // GET: /FileUpload/Upload
+        [HttpGet]
         [Authorize]
         public ActionResult Upload()
         {
@@ -70,38 +71,47 @@ namespace FileSystem.Controllers
                                 //write logic to add timestamp
 
                                 //saves file to /ZippedFIles folder in the root director with the origial filename in zipped format
-                                // zip.Save(Server.MapPath("~/ZippedFiles/" + file.FileName + ".zip"));
                                 zip.Save(Server.MapPath("~/ZippedFiles/"+file.FileName+".zip"));
                                 
                             }
 
                         }
 
-                        
+
+                        //Send Email Start
+                        //Sets the attributes of the MailMessage namely the from email address, to email address and the Subject of the email
                         MailMessage msg = new MailMessage();
                         msg.From = new MailAddress("Adminstration@FileSystem.com");
                         msg.To.Add(new MailAddress(email));
-                        
                         msg.Subject = "Please find the attached document" ;
                        
 
+                        //To attach the zipped file to the mail that is being sent
                         Attachment data = new Attachment(Server.MapPath("~/ZippedFiles/" + file.FileName + ".zip"));
+
+                       
+                        //To add additionaly details to the zipped file namely file creation time, last time the file was written and the last time the file was accessed
+                        //This is another security feature to determine if someone has tampered with the file in mid-air
                         ContentDisposition disposition = data.ContentDisposition;
                         disposition.CreationDate = System.IO.File.GetCreationTime(file.ToString());
                         disposition.ModificationDate = System.IO.File.GetLastWriteTime(file.ToString());
                         disposition.ReadDate = System.IO.File.GetLastAccessTime(file.ToString());
                         msg.Attachments.Add(data);
-                        SmtpClient smtpClient = new SmtpClient("smtp.sendgrid.net", Convert.ToInt32(587));
-                       // smtpClient.DeliveryMethod = SmtpDeliveryMethod.PickupDirectoryFromIis;
 
+                        //Setting SendGrid as the email client
+                        SmtpClient smtpClient = new SmtpClient("smtp.sendgrid.net", Convert.ToInt32(587));
+                        
+                        //Getting the details of the SendGrid account set in the Web.config file, it a bad programming practice and also a security vulnerability to expose these details in the code
                         var sendGridUserName = ConfigurationManager.AppSettings["SendGridUserName"];
                         var sentFrom = ConfigurationManager.AppSettings["SendGridFromEmail"];
                         var sendGridPassword = ConfigurationManager.AppSettings["SendGridPassword"];
                         System.Net.NetworkCredential credentials = new System.Net.NetworkCredential(sendGridUserName, sendGridPassword);
                         smtpClient.Credentials = credentials;
+                        //Setting the SMTP client to use SSL
                         smtpClient.EnableSsl = true;
                         try
                         {
+                            //Sends the email
                             smtpClient.Send(msg);
                         }
                         catch (Exception ex)
@@ -109,6 +119,7 @@ namespace FileSystem.Controllers
                             Console.WriteLine("Exception caught in CreateMessageWithAttachment(): {0}",
                                 ex.ToString());
                         }
+                        //Send Email End
 
                         // Twilio Begin
                         var accountSid = ConfigurationManager.AppSettings["SMSAccountIdentification"];
@@ -121,10 +132,10 @@ namespace FileSystem.Controllers
                         MessageResource result = MessageResource.Create(
                             new PhoneNumber(phoneNumber),
                             from: new PhoneNumber(fromNumber),
-                            body: "The password for the zip sent to "+email+" \n" + password 
+                            body: "The password for the zip sent to " + email + " \n" + password
                         );
 
-
+                        //Twillio End
                     }
 
                     ViewBag.FileStatus = "File uploaded successfully. -->" + pass + "-->" + file.ContentType+"---->"+email;

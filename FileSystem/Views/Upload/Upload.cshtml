@@ -18,8 +18,8 @@
         <div class="form-group">
             @Html.LabelFor(model => model.file, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-               @Html.EditorFor(model => model.file,new { htmlAttributes = new { @class = "form-control", @type = "file"} })
-            
+                @Html.TextBoxFor(model => model.file, new { @class = "form-control", type = "file" })
+                @*@Html.TextBox(model => model.file, new { htmlAttributes = new { @class = "form-control", @type = "file"} })*@
                 @Html.ValidationMessageFor(model => model.file, "", new { @class = "text-danger" })
             </div>
         </div>
@@ -31,7 +31,7 @@
             @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
         </div>
     </div>
-         @Html.ValidationSummary("", new { @class = "text-danger" })
+    @Html.ValidationSummary("", new { @class = "text-danger" })
     <div class="form-group">
         @Html.LabelFor(m => m.PhoneNumber, new { @class = "col-md-2 control-label" })
         <div class="col-md-10">
