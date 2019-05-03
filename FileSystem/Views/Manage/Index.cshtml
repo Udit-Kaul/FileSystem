@@ -25,10 +25,10 @@
             }
             ]
         </p>
-        <p>
+        @*<p>
             External Logins: @Model.Logins.Count
             @Html.ActionLink("[Manage]", "ManageLogins")
-        </p>
+        </p>*@
         @if (Model.TwoFactor)
         {
             using (Html.BeginForm("DisableTFA", "Manage", FormMethod.Post, new {@class = "form-horizontal", role = "form"}))
@@ -51,7 +51,7 @@
                 </p>
             }
         }
-        @if (Model.BrowserRemembered)
+        @*@if (Model.BrowserRemembered)
         {
             using (Html.BeginForm("ForgetBrowser", "Manage", FormMethod.Post, new {@class = "form-horizontal", role = "form"}))
             {
@@ -72,6 +72,6 @@
                     <input type="submit" value="Remember Browser" class="btn btn-default"/>
                 </p>
             }
-        }
+        }*@
     </div>
 </div>

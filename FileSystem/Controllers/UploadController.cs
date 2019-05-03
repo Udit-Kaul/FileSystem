@@ -36,23 +36,24 @@ namespace FileSystem.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public ActionResult Upload(HttpPostedFileBase file,String email, String phoneNumber)
+        public ActionResult Upload(HttpPostedFileBase file, String email, String phoneNumber)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    string pass = "";
-                    if (file != null )
+                    
+                    string password = "";
+                    if (file != null)
                     {
-                        String password = "";
+                       
 
                         Console.WriteLine("File type -->", file.ContentType);
                         using (ZipFile zip = new ZipFile())
                         {
                             //Adds AES 256 encryption to the file
                             zip.Encryption = EncryptionAlgorithm.WinZipAes256;
-                            //  zip.Password = "123456";
+                            
 
                             //used for creating a password for the zipped file with RNGCryptoServiceProvider library
                             using (RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider())
@@ -63,7 +64,7 @@ namespace FileSystem.Controllers
                                 rngCsp.GetNonZeroBytes(salt);
                                 password = Convert.ToBase64String(salt);
                                 Console.Write("Password-->", password);
-                                pass = zip.Password = password;
+                                zip.Password = password;
 
 
                                 string path = Path.Combine(Server.MapPath("~/UploadedFiles"), "packed");
@@ -72,8 +73,8 @@ namespace FileSystem.Controllers
                                 //write logic to add timestamp
 
                                 //saves file to /ZippedFIles folder in the root director with the origial filename in zipped format
-                                zip.Save(Server.MapPath("~/ZippedFiles/"+file.FileName+".zip"));
-                                
+                                zip.Save(Server.MapPath("~/ZippedFiles/" + file.FileName + ".zip"));
+
                             }
 
                         }
@@ -84,13 +85,13 @@ namespace FileSystem.Controllers
                         MailMessage msg = new MailMessage();
                         msg.From = new MailAddress("Adminstration@FileSystem.com");
                         msg.To.Add(new MailAddress(email));
-                        msg.Subject = "Please find the attached document" ;
-                       
+                        msg.Subject = "Please find the attached document";
+
 
                         //To attach the zipped file to the mail that is being sent
                         Attachment data = new Attachment(Server.MapPath("~/ZippedFiles/" + file.FileName + ".zip"));
 
-                       
+
                         //To add additionaly details to the zipped file namely file creation time, last time the file was written and the last time the file was accessed
                         //This is another security feature to determine if someone has tampered with the file in mid-air
                         ContentDisposition disposition = data.ContentDisposition;
@@ -101,7 +102,7 @@ namespace FileSystem.Controllers
 
                         //Setting SendGrid as the email client
                         SmtpClient smtpClient = new SmtpClient("smtp.sendgrid.net", Convert.ToInt32(587));
-                        
+
                         //Getting the details of the SendGrid account set in the Web.config file, it a bad programming practice and also a security vulnerability to expose these details in the code
                         var sendGridUserName = ConfigurationManager.AppSettings["SendGridUserName"];
                         var sentFrom = ConfigurationManager.AppSettings["SendGridFromEmail"];
@@ -139,12 +140,12 @@ namespace FileSystem.Controllers
                         //Twillio End
                     }
 
-                    ViewBag.FileStatus = "File uploaded successfully. -->" + pass + "-->" + file.ContentType+"---->"+email;
+                    ViewBag.FileStatus = "File uploaded successfully. -->" + password;
                 }
                 catch (Exception)
                 {
 
-                    ViewBag.FileStatus = "Error while file uploading.--->"+email;
+                    ViewBag.FileStatus = "Error while file uploading.--->";
                 }
 
             }

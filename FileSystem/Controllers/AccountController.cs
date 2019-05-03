@@ -10,6 +10,8 @@ using System.Web.Mvc;
 
 namespace FileSystem.Controllers
 {
+
+ 
     [Authorize]
     public class AccountController : Controller
     {
@@ -101,7 +103,7 @@ namespace FileSystem.Controllers
             var user = await UserManager.FindByIdAsync(await SignInManager.GetVerifiedUserIdAsync());
             if (user != null)
             {
-                ViewBag.Status = "For DEMO purposes the current " + provider + " code is: " + await UserManager.GenerateTwoFactorTokenAsync(user.Id, provider);
+               // ViewBag.Status =  " code is: " + await UserManager.GenerateTwoFactorTokenAsync(user.Id, provider);
             }
             return View(new VerifyCodeViewModel { Provider = provider, ReturnUrl = returnUrl, RememberMe = rememberMe });
         }
@@ -392,8 +394,9 @@ namespace FileSystem.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
         {
-            AuthenticationManager.SignOut();
+            AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
             return RedirectToAction("Index", "Home");
+
         }
 
         //
@@ -464,4 +467,5 @@ namespace FileSystem.Controllers
         }
         #endregion
     }
+    
 }
